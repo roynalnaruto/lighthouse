@@ -296,12 +296,15 @@ fn spawn_service<T: BeaconChainTypes>(
                                     let attestation = &subnet_and_attestation.1;
                                     // checks if we have an aggregator for the slot. If so, we process
                                     // the attestation
+                                    /*
                                     if service.attestation_service.should_process_attestation(
                                         &id,
                                         &source,
                                         subnet,
                                         attestation,
                                     ) {
+                                    */
+                                    if true {
                                         let _ = service
                                             .router_send
                                             .send(RouterMessage::PubsubMessage(id, source, message))
