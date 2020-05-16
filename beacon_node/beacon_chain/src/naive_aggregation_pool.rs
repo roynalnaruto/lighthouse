@@ -1,3 +1,4 @@
+use crate::metrics;
 use parking_lot::RwLock;
 use std::collections::HashMap;
 use types::{Attestation, AttestationData, EthSpec, Slot};
@@ -93,6 +94,8 @@ impl<E: EthSpec> AggregatedAttestationMap<E> {
             {
                 Ok(InsertOutcome::SignatureAlreadyKnown { committee_index })
             } else {
+                let _timer =
+                    metrics::start_timer(&metrics::ATTESTATION_PROCESSING_AGG_POOL_AGGREGATION);
                 existing_attestation.aggregate(a);
                 Ok(InsertOutcome::SignatureAggregated { committee_index })
             }
@@ -175,7 +178,11 @@ impl<E: EthSpec> NaiveAggregationPool<E> {
             });
         }
 
-        let mut maps = self.maps.write();
+        let mut maps = {
+            let _timer =
+                metrics::start_timer(&metrics::ATTESTATION_PROCESSING_AGG_POOL_MAPS_WRITE_LOCK);
+            self.maps.write()
+        };
 
         let outcome = if let Some(map) = maps.get_mut(&slot) {
             map.insert(attestation)
