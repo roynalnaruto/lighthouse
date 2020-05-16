@@ -187,6 +187,7 @@ impl<E: EthSpec> NaiveAggregationPool<E> {
         let outcome = if let Some(map) = maps.get_mut(&slot) {
             map.insert(attestation)
         } else {
+            let _timer = metrics::start_timer(&metrics::ATTESTATION_PROCESSING_AGG_POOL_CREATE_MAP);
             // To avoid re-allocations, try and determine a rough initial capacity for the new item
             // by obtaining the mean size of all items in earlier epoch.
             let (count, sum) = maps
@@ -230,6 +231,12 @@ impl<E: EthSpec> NaiveAggregationPool<E> {
 
         // Taking advantage of saturating subtraction on `Slot`.
         let lowest_permissible_slot = current_slot - Slot::from(SLOTS_RETAINED);
+
+        // No need to prune if the lowest permissible slot has not changed.
+        if *self.lowest_permissible_slot.write() == lowest_permissible_slot {
+            return;
+        }
+
         *self.lowest_permissible_slot.write() = lowest_permissible_slot;
         let mut maps = self.maps.write();
 
